@@ -1,0 +1,14 @@
+{
+  "name": "sniftr",
+  "displayName": "Sniftr",
+  "version": "0.1.0",
+  "description": "Sniftr runtime debugging, logpoint, and diagnostics skills for Cursor.",
+  "author": {
+    "name": "Sniftr",
+    "url": "https://github.com/sniftr/sniftr-ai-toolkit"
+  },
+  "homepage": "https://github.com/sniftr/sniftr-ai-toolkit",
+  "repository": "https://github.com/sniftr/sniftr-ai-toolkit",
+  "license": "Apache-2.0",
+  "keywords": ["sniftr", "debugging", "logpoints", "diagnostics", "java"]
+}

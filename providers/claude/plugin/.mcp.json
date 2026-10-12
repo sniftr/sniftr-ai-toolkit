@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "sniftr-logpoints": {
+      "type": "http",
+      "url": "https://mcp.sniftr.ai/logpoints"
+    },
+    "sniftr-admin": {
+      "type": "http",
+      "url": "https://mcp.sniftr.ai/admin"
+    }
+  }
+}

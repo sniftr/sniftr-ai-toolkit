@@ -1,0 +1,17 @@
+{
+  "name": "sniftr",
+  "owner": {
+    "name": "Sniftr"
+  },
+  "metadata": {
+    "description": "Sniftr runtime debugging, logpoint, and diagnostics skills.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "sniftr",
+      "source": "./providers/cursor/plugin",
+      "description": "Runtime debugging and logpoint diagnostics for Cursor."
+    }
+  ]
+}

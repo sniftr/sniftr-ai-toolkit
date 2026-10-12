@@ -1,0 +1,20 @@
+{
+  "name": "sniftr",
+  "interface": {
+    "displayName": "Sniftr"
+  },
+  "plugins": [
+    {
+      "name": "sniftr",
+      "source": {
+        "source": "local",
+        "path": "./providers/codex/plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

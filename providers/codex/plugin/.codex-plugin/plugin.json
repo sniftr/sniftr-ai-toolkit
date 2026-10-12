@@ -1,0 +1,32 @@
+{
+  "name": "sniftr",
+  "version": "0.1.0",
+  "description": "Sniftr runtime debugging, logpoint, and diagnostics skills for Codex.",
+  "author": {
+    "name": "Sniftr",
+    "url": "https://github.com/sniftr/sniftr-ai-toolkit"
+  },
+  "homepage": "https://github.com/sniftr/sniftr-ai-toolkit",
+  "repository": "https://github.com/sniftr/sniftr-ai-toolkit",
+  "license": "Apache-2.0",
+  "keywords": ["sniftr", "debugging", "logpoints", "diagnostics", "java"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Sniftr",
+    "shortDescription": "Runtime debugging and logpoint diagnostics",
+    "longDescription": "Sniftr helps coding agents investigate running applications with runtime logpoints, logs, and evidence-driven diagnostics. This Codex plugin bundles practical skills for inspecting source, placing safe logpoints, reading emitted logs, and turning runtime observations into clear debugging conclusions. Java is the currently supported runtime.",
+    "developerName": "Sniftr",
+    "category": "Developer Tools",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/sniftr/sniftr-ai-toolkit",
+    "privacyPolicyURL": "https://github.com/sniftr/sniftr-ai-toolkit",
+    "termsOfServiceURL": "https://github.com/sniftr/sniftr-ai-toolkit",
+    "brandColor": "#0F766E",
+    "defaultPrompt": [
+      "Investigate this runtime bug with Sniftr logpoints.",
+      "Find why this application flow behaves differently in staging.",
+      "Use logs and logpoints to explain this failure."
+    ]
+  }
+}

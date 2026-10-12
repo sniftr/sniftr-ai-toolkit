@@ -1,0 +1,23 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "sniftr-ai-toolkit",
+  "version": "0.1.0",
+  "description": "Use Sniftr to investigate live application behavior with logpoints, runtime logs, and evidence-driven diagnostics in local, staging, QA, or production-like environments. Currently supports Java.",
+  "author": {
+    "name": "Sniftr",
+    "url": "https://github.com/sniftr/sniftr-ai-toolkit"
+  },
+  "keywords": [
+    "sniftr",
+    "logpoints",
+    "runtime debugging",
+    "java",
+    "jvm",
+    "production debugging",
+    "staging",
+    "logs"
+  ],
+  "license": "Apache-2.0",
+  "repository": "https://github.com/sniftr/sniftr-ai-toolkit",
+  "homepage": "https://github.com/sniftr/sniftr-ai-toolkit/issues"
+}

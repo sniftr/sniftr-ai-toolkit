@@ -1,0 +1,18 @@
+{
+  "name": "sniftr-ai-toolkit",
+  "version": "0.1.0",
+  "description": "AI agent toolkit for Sniftr runtime debugging, logpoints, and diagnostics.",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:skills": "npm run prepare:versions && node scripts/prepare-provider-skills.mjs",
+    "prepare:versions": "node scripts/prepare-provider-versions.mjs",
+    "validate:versions": "node scripts/prepare-provider-versions.mjs --check",
+    "test:versions": "node --test scripts/prepare-provider-versions.test.mjs",
+    "validate:codex": "npm run validate:versions && test -f .agents/plugins/marketplace.json && test -f providers/codex/plugin/.codex-plugin/plugin.json && test -f providers/codex/plugin/.mcp.json && test -d providers/codex/plugin/skills",
+    "validate:claude": "npm run validate:versions && test -f .claude-plugin/marketplace.json && test -f providers/claude/plugin/.claude-plugin/plugin.json && test -f providers/claude/plugin/.mcp.json && test -d providers/claude/plugin/skills",
+    "validate:cursor": "npm run validate:versions && test -f .cursor-plugin/marketplace.json && test -f providers/cursor/plugin/plugin.json && test -f providers/cursor/plugin/mcp.json && test -d providers/cursor/plugin/skills",
+    "validate:kiro": "npm run validate:versions && test -f plugin.json && test -f mcp.json && test -d skills && test -d dev.kiro/steering"
+  }
+}
