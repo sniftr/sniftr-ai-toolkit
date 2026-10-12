@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Sniftr runtime debugging, logpoint, and diagnostics skills.",
-    "version": "0.1.0"
+    "version": "1.0.0"
   },
   "plugins": [
     {

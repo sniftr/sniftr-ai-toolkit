@@ -1,6 +1,6 @@
 {
   "name": "sniftr-ai-toolkit",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "AI agent toolkit for Sniftr runtime debugging, logpoints, and diagnostics.",
   "license": "Apache-2.0",
   "private": true,

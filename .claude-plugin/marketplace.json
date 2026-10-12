@@ -4,18 +4,23 @@
     "name": "Sniftr"
   },
   "description": "Sniftr runtime debugging, logpoint, and diagnostics skills.",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "plugins": [
     {
       "name": "sniftr",
       "source": "./providers/claude/plugin",
       "description": "Runtime debugging and logpoint diagnostics for Claude Code.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "author": {
         "name": "Sniftr"
       },
       "category": "Developer Tools",
-      "tags": ["debugging", "diagnostics", "java", "logpoints"]
+      "tags": [
+        "debugging",
+        "diagnostics",
+        "java",
+        "logpoints"
+      ]
     }
   ]
 }
