@@ -9,15 +9,16 @@ unrelated points owned by other investigations.
 
 Supply the saved `envId` and exactly one of nonempty `ids` or `all: true`.
 Use full IDs from inspection, not short IDs. Duplicates are processed once.
+If any explicit ID is missing, inaccessible, or belongs to another environment,
+the entire request returns `isError` with `not_found` before any point changes.
 An optional `appId` restricts the selection; with explicit IDs, a mismatched app
 is a per-point error rather than a silently omitted target.
 
-`all: true` captures the target set once. It excludes disabled, removing and
+`all: true` captures accessible targets once. It excludes disabled, removing and
 removed points, and includes disabling points. Points appearing later are not
 added. Use it only when disabling every eligible point in the selected scope is
 intended. Explicit already-disabled IDs complete without mutation; explicit
-removing/removed IDs fail. Missing IDs and IDs from another environment both
-produce `not_found`.
+removing/removed IDs fail individually after access validation.
 
 Complete MCP example (replace illustrative identifiers with inspected values):
 
@@ -43,7 +44,7 @@ For an intentionally selected whole application:
 
 ## Interpret every result
 
-`requestedCount` counts unique selected targets. Each appears in either `updated`
+After access validation, `requestedCount` counts unique selected targets. Each appears in either `updated`
 (as `{logpoint, operation}`) or `failed` (as `{id, error}`). Read each result;
 HTTP success or an MCP result without `isError` can contain per-point failures.
 `error.code`, `message`, and agent-facing `nextAction` explain recovery.

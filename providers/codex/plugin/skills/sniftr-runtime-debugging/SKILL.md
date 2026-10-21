@@ -17,6 +17,8 @@ Use targeted, read-only logpoints when source inspection and existing logs canno
 
 Use the Sniftr logpoints MCP for instrumentation and an available application logging integration for emitted evidence. Sniftr does not provide a logs MCP. Follow current tool schemas and returned guidance; this skill explains how to compose them into an investigation.
 
+Organization Admins assume the USER role when using the logpoints MCP server. The admin MCP server requires an organization Admin; configuration changes currently use Sniftr Settings.
+
 ## 1. Establish the question and evidence path
 
 Identify the symptom, expected behavior, intended environment/app, and one observation that distinguishes plausible causes. Reuse established context; ask only for missing information that affects the next decision.
@@ -31,7 +33,9 @@ Use `list_environments` only when the intended environment ID is not established
 
 For new instrumentation, use `list_apps` with the environment and source class FQCN to select the intended app and collect its reported revisions. A class match is at app level, not proof for every instance or of source equality. A successful empty result means no checked app reported the class; verify the environment and FQCN. An incomplete check returns `runtime_unavailable`; follow its recovery guidance without treating the error as class absence. Do not substitute another app. Ask for selection only when ambiguity remains.
 
-Use `list_logpoints` once for the relevant environment to find reusable probes and avoid duplicates. For a known point, use `get_logpoint` when its definition/status is not already available from a current inspection. Both return the same public definition and effective status. Preserve full IDs for tool calls and short IDs for log searches.
+Create a case with `create_case(envId, shortDescription)` after selecting the environment, or resume the same investigation using `list_cases(envId)`. Listings show the latest 500 open cases by default; `includeClosed: true` includes closed cases. Direct inspection requires `envId` and `caseId` together, works for any status, and excludes `includeClosed`. Keep the selected environment explicit; a case or logpoint from a different environment is rejected. Keep the active canonical case ID with the investigation. MCP creation requires an accessible open case in the same environment.
+
+Use `list_logpoints` once with the relevant environment and, preferably, the active `caseId` to find reusable probes and avoid duplicates. The case filter is optional; omission discovers all accessible case, ad-hoc, and legacy points. Do not silently reuse another investigation's probes. Use explicit IDs from the active case for bulk operations. Any missing or inaccessible ID rejects the batch before changes; lifecycle failures can still produce partial results. `includeRemoved: true` exposes retained deleted points for historical inspection. For a known point, use `get_logpoint` when its definition/status is not already available from a current inspection. Both return the same public definition and effective status. Preserve full IDs for tool calls and short IDs for log searches.
 
 | Intent or current state | Tool and purpose |
 | --- | --- |
@@ -60,7 +64,7 @@ Java logpoint conditions and message expressions are evaluated before the instru
 
 Apply the returned expression rules before submitting: method names in both messages and conditions must match an allow rule; sensitive-name deny rules apply only to message expressions and take precedence there, and permission by name does not guarantee supported types or read-only behavior. Current expression rules apply to new and replacement definitions. Enable and recovery preserve recorded expression-policy approval. Older definitions without recorded approval must pass current rules before delivery. Prefer direct values over method calls. Keep calls bounded and read-only; avoid secrets, credentials, tokens, raw personal data, full payloads and unbounded objects.
 
-Messages contain text and `{value-access}` placeholders; comparisons and boolean logic belong in `condition`. Put the facts needed for diagnosis in the message: a false condition emits nothing. Use a selective, inexpensive condition on busy paths and guard nullable receivers before dereferencing. Known MDC keys can provide request correlation when locals do not. Do not duplicate IDs, timestamps or location metadata already supplied by Sniftr/logging.
+Messages contain text and `{value-access}` placeholders; comparisons and boolean logic belong in `condition`. Put the facts needed for diagnosis in the message: a false condition emits nothing. Use a selective, inexpensive condition on busy paths and guard nullable receivers before dereferencing. [Preconfigured MDC keys](references/logpoint-compatibility-java.md#mdc) can provide request correlation when locals do not. Do not duplicate IDs, timestamps or location metadata already supplied by Sniftr/logging.
 
 Read [worked Java examples and rejection repairs](references/logpoint-examples-java.md) for branch decisions, correlated service boundaries, hot paths or uncertain expressions.
 
@@ -92,7 +96,7 @@ Use an active result to begin observation, but do not assume every instance acce
 
 If a point remains pending while its app is connected and there is no reported failure, its class may need traffic to load. Use the authorized trigger or agreed traffic window, then inspect the same point and check logs; do not wait indefinitely for active before triggering that flow. Pending alone does not confirm installation. Record the start/end time and relevant request/job identifier for every observation.
 
-Search application log message text for `guidance.logSearchMarker` or `[LOGPOINT <shortId>]` with the time window. Do not use the full tool ID in that marker or assume a structured `logpoint_id` field exists. Use a distinctive message label/correlation value if the marker is unavailable. Paginate when needed to assess absence and account for ingestion delay.
+Search application log message text for `LOGPOINT <case shortId>`, using the case's returned `shortId` with environment/time filters. The stored case short ID is the first eight characters of its canonical ID. Updated agents print `[LOGPOINT <case shortId>-<sequence>]`; older agents print only `[LOGPOINT <case shortId>]`. A suffix-specific search misses older-agent lines and cannot establish non-execution. For an individual updated-agent point, use `guidance.logSearchMarker` or `[LOGPOINT <shortId>]`. Case-wide evidence remains searchable after deletion or closure, subject to external log retention and permissions. Do not use the full tool ID in that marker or assume a structured `logpoint_id` field exists. Use a distinctive message label/correlation value if the marker is unavailable. Paginate when needed to assess absence and account for ingestion delay.
 
 Before interpreting missing logs, check the target app/version received the traffic, the point's state during the window, throttling, whether the condition matched, and log filters/pagination. If any cannot be established, report missing evidence rather than concluding the code did not execute. Reactivation acceptance alone cannot establish that all targeted instances resumed.
 
@@ -121,9 +125,11 @@ Remove temporary points created or intentionally managed in this investigation; 
 
 No source verification is needed for cleanup. Failed, skipped, disabled or removed points can be deleted offline; starting runtime removal otherwise needs a connected app. Removal retries for a removing point inspect/wait for the existing operation without another JVM removal command. Follow the [removal](references/removal.md) and [disablement](references/disablement.md) procedures for exact selection, offline behavior and uncertainty.
 
-Force deletion or offline force disablement needs explicit approval. Neither a completed forced operation nor absence in Sniftr independently proves every runtime instance stopped logging. Timeout preserves unresolved work; report it honestly. Stop removal polling on completed deletion or `not_found` for the point just removed.
+Force deletion or offline force disablement needs explicit approval. Neither a completed forced operation nor absence in Sniftr independently proves every runtime instance stopped logging. Timeout preserves unresolved work; report it honestly. Stop removal polling when the retained point has status `removed`; deletion never removes its database record. Historical presence is expected. The `forced` flag records deletion without waiting for runtime cleanup.
 
-Report confirmed observations with request/time/location evidence, distinguish the causal inference and remaining unknowns, and include cleanup outcomes. For example: “Request req-1842 emitted eligible=false at QuoteService:43; source requires eligibility for the discount branch. Why eligibility was false remains unknown. The temporary quote probe was removed.” Do not claim a cause beyond the evidence.
+After all case logpoints have status `removed`, call `close_case` with the active `envId` and `caseId`, and `status: completed` for a finished investigation or `discarded` for an abandoned one. Closure performs no cleanup: disabled, failed, and removing points still block it, returning the remaining count. Do not force-delete automatically to satisfy closure. Cases cannot reopen; repeating the same closure is idempotent, and a completed case may later be discarded. If retaining disabled points, leave the case open and report that choice.
+
+Report the case ID, confirmed observations with request/time/location evidence, distinguish the causal inference and remaining unknowns, and include cleanup outcomes. For example: “Request req-1842 emitted eligible=false at QuoteService:43; source requires eligibility for the discount branch. Why eligibility was false remains unknown. The temporary quote probe was removed.” Do not claim a cause beyond the evidence.
 
 ## Effective status guide
 
@@ -137,4 +143,4 @@ Report confirmed observations with request/time/location evidence, distinguish t
 | `inactive` | Target disconnected. Resume mutation work only after reconnection. |
 | `removing` / `disabling` | Cleanup is outstanding. Inspect within the budget; preserve uncertainty if it does not settle. |
 | `disabled` | Definition retained but disabled. Read cleanup caveats; enable only when resumption is intended. |
-| `removed` | Reported removed. Finish cleanup/inspection; absence alone does not independently prove every runtime instance is clear. |
+| `removed` | Soft-deleted, retained history; cannot be re-enabled. Stop deletion polling and inspect cleanup audit for uncertainty. |

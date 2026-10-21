@@ -50,7 +50,7 @@ Supported roots include:
 - method parameters and locals in scope at the effective line;
 - instance/static fields reachable from `this`;
 - `this` and qualified outer access;
-- plain SLF4J MDC key names when MDC is visible;
+- preconfigured [SLF4J MDC keys](#mdc);
 - FQCN static classes/members.
 
 Use the declared/static type, not the runtime type, to decide which members an expression can access. Concrete generic metadata is preserved where supported; `Object`, raw collections, restricted type-variable receivers or base classes can still hide members. Add an explicit cast only when the runtime value is reliably that type:
@@ -162,7 +162,7 @@ filter noise, target the relevant request/data shape/state, and prevent
 excessive logging that can trigger rate limits and throttle the logpoint. On hot
 paths, add a selective condition whenever a reliable discriminator is available,
 such as a request ID, tenant/account ID, feature flag, endpoint/action name,
-status/category, bounded state check, or SLF4J MDC key.
+status/category, bounded state check, or preconfigured SLF4J MDC key.
 
 Do not rely on a condition as the primary diagnostic signal. A false condition
 emits nothing. Include the runtime evidence you need in the emitted message.
@@ -191,7 +191,7 @@ status == com.example.Status.READY
 Supported condition expression roots and values:
 
 - parameters, locals, fields, and `this` in scope at the effective line;
-- plain SLF4J MDC key names when MDC is visible;
+- preconfigured [SLF4J MDC keys](#mdc);
 - FQCN static fields/methods and enum constants;
 - literals: string, boolean, null, integer, long, float, double, and negative numeric literals.
 
@@ -295,16 +295,24 @@ Only supported receiver/access-chain casts are available; arbitrary casts inside
 
 ### MDC
 
-Sniftr supports plain MDC key references when `org.slf4j.MDC` is visible to the target classloader. Use known application MDC keys proactively for request/trace/tenant/account filtering, especially in conditions on hot paths:
+MDC keys must be declared at Java agent startup via `sniftr.mdc.keys` or
+`SNIFTR_MDC_KEYS`, as a comma-separated, case-sensitive list. The JVM property
+takes precedence; an empty list disables lookup. Changing the list requires
+restarting the application. Use keys already configured on the deployed agent
+and populated by the application, with SLF4J MDC visible to the target classloader.
+
+Reference keys as plain names, not `org.slf4j.MDC.get(...)` calls:
 
 ```text
 message:   trace={traceId}
 condition: traceId != null
 ```
 
-Reference MDC keys as plain names such as `requestId` or `traceId`; do not call `org.slf4j.MDC.get(...)` yourself. Compound expressions such as `UnknownType.member` are not MDC keys and are rejected.
-
-Explicit target capability configuration overrides automatic MDC visibility detection. With MDC disabled, unknown names are rejected. With MDC enabled, an otherwise unresolved simple name may optimistically bind as an MDC key: acceptance does not prove the key exists or that the name is a valid local. Use keys known from application configuration/code. A missing key may render `NOT_FOUND`; inspect spelling, scope and MDC context rather than treating that text as the application value.
+Locals and fields take precedence; out-of-scope locals do not fall back to MDC.
+Unconfigured names are rejected. Keys containing dots or other expression
+punctuation are unsupported. A configured key missing from the executing
+thread's MDC renders `{traceId:NOT_FOUND}` in messages and evaluates as `null`
+in conditions.
 
 ### Lambdas and inner classes
 
@@ -351,7 +359,8 @@ On unsupported inference, log `first` and `second` separately or inspect an exis
 | Reason fragment | Likely cause | Correction |
 | --- | --- | --- |
 | `not an effective bytecode location` | Wrong/nonexistent/out-of-range line | Move to a body statement in the exact method. |
-| `Unknown variable` | Typo or value out of scope | Move to an executable line after initialization or use an available root; with MDC enabled, some misspellings instead pass as unknown keys. |
+| `Unknown variable` | Typo, value out of scope, or unconfigured MDC key | Check spelling, scope, and the agent’s configured MDC keys; otherwise use an available root. |
+| `Configured MDC key` with `unavailable` | SLF4J MDC is not visible to the target classloader | Use an existing local/field or resolve the application's logging classpath configuration. |
 | `local variable ... not in scope` | Correct name, wrong effective line | Move inside its lexical/live range. |
 | `Unknown variable or type reference` / `Unresolved condition root` | Root unavailable or unqualified class name | Check scope; use the class FQCN for static access. |
 | `Static field/method not found` | Wrong FQCN/member/signature | Verify deployed class and exact member. |

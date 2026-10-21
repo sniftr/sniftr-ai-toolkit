@@ -26,10 +26,11 @@ public Quote quote(String requestId, User user, Cart cart) {
 
 Question: Why did request `req-1842` receive the standard quote?
 
-Create one point on the `if` line after `eligible` is assigned:
+Create or resume the investigation case first; replace the illustrative case ID below with its returned canonical ID. Create one point on the `if` line after `eligible` is assigned:
 
 ```json
 {
+  "caseId": "7k3m9q2v8x4n6r5t",
   "envId": "qa",
   "appId": "checkout-service",
   "className": "com.acme.checkout.QuoteService",
@@ -100,7 +101,7 @@ condition: requestId == "req-1842" && profile == null
 
 Both use the same request identifier and reproduction window. The example
 assumes requestId is an existing parameter at both locations; do not change the
-application to add it. If unavailable, use an established MDC discriminator or
+application to add it. If unavailable, use a [preconfigured MDC key](logpoint-compatibility-java.md#mdc) or
 another existing correlation value that is valid in both scopes.
 
 Messages from both points for that request show null at both boundaries. A alone
@@ -139,8 +140,9 @@ If `isExpired(now)` is rejected as not read-only or the argument type is unsuita
 
 ## 4. MDC-scoped condition
 
-Source line does not expose `requestId` as a local, but the application sets it
-in SLF4J MDC for the request thread:
+The source line has no `requestId` local or field. The application populates it
+in the request thread's SLF4J MDC, and the Java agent starts with
+`-Dsniftr.mdc.keys=requestId` (see [MDC prerequisites](logpoint-compatibility-java.md#mdc)):
 
 ```java
 return authorization.authorize(user, action);
@@ -154,9 +156,8 @@ message:   decision userId={user.getId()} action={action}
 condition: requestId == "req-1842"
 ```
 
-Use known MDC keys proactively for request/trace/tenant/account filters on hot
-paths. Reference MDC keys as plain names such as `requestId`; do not call
-`org.slf4j.MDC.get(...)` yourself.
+If `requestId` has no value on the executing thread, it evaluates as `null`,
+so this condition emits nothing.
 
 ## 5. Skipped logpoint repairs
 

@@ -15,11 +15,12 @@ Enable reuses recorded expression-policy approval. Older definitions without it 
 Inspect the points, refresh the target apps, and follow
 [local source verification](source-verification.md#enabling-a-retained-definition).
 Supply `envId` and exactly one of nonempty `ids` or `all: true`. Duplicate IDs are
-processed once. An optional `appId` restricts selection. Every unique explicit ID
-receives an outcome or error: missing/cross-environment IDs return `not_found`;
-wrong-app or non-disabled points return `precondition_failed`.
+processed once. If any explicit ID is missing, inaccessible, or belongs to another
+environment, the entire request returns `isError` with `not_found` before any
+point changes. After access validation, wrong-app or non-disabled points return
+per-point `precondition_failed` errors. An optional `appId` restricts selection.
 
-`all: true` selects one snapshot of disabled points in the environment/app.
+`all: true` selects one snapshot of accessible disabled points in the environment/app.
 Inspect that scope first and supply a verification entry for each selected ID.
 Unselected or duplicate verification entries reject the request before mutation;
 a missing entry fails that individual point. An empty selection with

@@ -27,17 +27,18 @@ another removal command to the JVM.
 | `completed` | Removal from Sniftr completed. When a normal runtime command was needed, a terminal removal report was received. Stop polling. |
 | `timed_out` | Waiting expired without cancelling removal or restoring its prior status. The point remains removing unless a later result settles it. Inspect before retrying. |
 
-The response includes the latest effective `logpoint`, or `null` if no saved
-point remains. An inspection returning `not_found` after removal is a stopping
-condition. Neither absence nor a completed result independently proves that every
+The response includes the retained `logpoint`; successful deletion sets its
+status to `removed` and never deletes its database record. Stop polling at that
+state. Historical lookup remains available; repeat deletion is idempotent and
+does not dispatch another command or rewrite audit. The `forced` flag records deletion without waiting for runtime cleanup. Neither absence nor a completed result independently proves that every
 runtime instance has removed its instrumentation; this matters for disconnected
 instances and force deletion. Do not use a replacement logpoint to test cleanup.
 
 For example, a synchronous call times out while the point is removing. After
 inspection, another synchronous call with the same IDs waits on the existing
 removal. Confirmation finishes deletion and returns completed; another timeout
-keeps it removing. If inspection instead returns not_found, stop: the saved point
-is already absent. If the runtime reports no record while the saved point exists,
+keeps it removing. If inspection instead returns status removed, stop: the retained point
+is already soft-deleted. If the runtime reports no record while the saved point exists,
 Sniftr returns precondition_failed and does not claim cleanup. Inspect the same
 ID once; if unchanged, stop repeated removal attempts and report unresolved
 cleanup. A later runtime sync may settle it, but there is no MCP reconciliation
@@ -53,8 +54,8 @@ point without confirmed runtime cleanup:
 {"envId":"qa","id":"point-1","force":true}
 ```
 
-Sniftr attempts asynchronous runtime removal when applicable, then deletes the
-saved point without waiting. `completed` in this case confirms only removal from
+Sniftr retains a removed tombstone and attempts asynchronous runtime removal
+when applicable without waiting. `completed` in this case confirms only removal from
 Sniftr. An instance may still emit logpoint messages. Explain that limitation
 when reporting cleanup; do not claim that bytecode removal was verified.
 
@@ -68,3 +69,5 @@ Inspect the point and its statusReason. Force deletion is an option only with
 explicit approval to delete the saved definition without confirmed cleanup. Unexpected `internal_error`
 may occur after dispatch. Inspect the same ID before retrying uncertain work and
 do not treat any of these errors as authorization for force deletion.
+
+Close the active case only after all its logpoints are removed. `close_case` requires the active `envId` and `caseId`, checks this prerequisite, and never deletes points or dispatches cleanup. Force-deleted tombstones satisfy it even when runtime cleanup is unconfirmed.

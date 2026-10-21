@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "sniftr",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sniftr runtime debugging, logpoint, and diagnostics skills for Cursor.",
   "author": {
     "name": "Sniftr",
